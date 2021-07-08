@@ -1,17 +1,30 @@
 package main
 
 import (
+	"html/template"
 	"log"
 	"net/http"
+	"time"
 )
 
-func main() {
-	//ディレクトリを指定する
-	fs := http.FileServer(http.Dir("static"))
-	//ルーティング設定。"/"というアクセスがきたらstaticディレクトリのコンテンツを表示させる
-	http.Handle("/", fs)
+func clockHandler(w http.ResponseWriter, r *http.Request) {
+	path := "web/clock/clock.html.tpl"
+	template_file_name := "clock.html.tpl"
+	t := template.Must(template.ParseFiles(path))
 
-	log.Println("Listening...")
-	// 3000ポートでサーバーを立ち上げる
-	http.ListenAndServe(":3000", nil)
+	// テンプレートを描画
+	if err := t.ExecuteTemplate(w, template_file_name, time.Now()); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func main() {
+	// ハンドラーを登録
+	http.HandleFunc("/clock", clockHandler)
+
+	//ディレクトリを指定する
+	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("web/test"))))
+
+	log.Println("Listing...")
+	log.Fatal(http.ListenAndServe(":8000", nil))
 }
